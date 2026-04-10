@@ -1,24 +1,768 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Finoexpert Finance Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finoexpert – Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div id="dashboard">
-        <h1>Finoexpert Finance Dashboard</h1>
-        <div id="nse-price">
-            <h2>NSE Price</h2>
-            <div id="price-display"></div>
-        </div>
-        <div id="trading-features">
-            <h2>Trading Features</h2>
-            <button id="buy-button">Buy</button>
-            <button id="sell-button">Sell</button>
-        </div>
+
+<!-- ========= TOP BAR ========= -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+      <i class="fa fa-bars"></i>
+    </button>
+    <div class="brand">
+      <i class="fa fa-chart-line brand-icon"></i>
+      <span class="brand-name">Finoexpert</span>
     </div>
-    <script src="app.js"></script>
+  </div>
+
+  <div class="ticker-strip" id="tickerStrip">
+    <div class="ticker-item" id="tick-nifty">
+      <span class="tick-label">NIFTY 50</span>
+      <span class="tick-val" id="niftyVal">--</span>
+      <span class="tick-chg" id="niftyChg">--</span>
+    </div>
+    <div class="ticker-item" id="tick-sensex">
+      <span class="tick-label">SENSEX</span>
+      <span class="tick-val" id="sensexVal">--</span>
+      <span class="tick-chg" id="sensexChg">--</span>
+    </div>
+    <div class="ticker-item" id="tick-bank">
+      <span class="tick-label">NIFTY BANK</span>
+      <span class="tick-val" id="bankVal">--</span>
+      <span class="tick-chg" id="bankChg">--</span>
+    </div>
+    <div class="ticker-item" id="tick-vix">
+      <span class="tick-label">INDIA VIX</span>
+      <span class="tick-val" id="vixVal">--</span>
+      <span class="tick-chg" id="vixChg">--</span>
+    </div>
+    <div class="market-status" id="marketStatus">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Loading…</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="account-summary">
+      <span class="acc-label">Balance</span>
+      <span class="acc-val" id="topBalance">₹0.00</span>
+    </div>
+    <div class="account-summary">
+      <span class="acc-label">P&amp;L</span>
+      <span class="acc-val" id="topPnl">₹0.00</span>
+    </div>
+    <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme">
+      <i class="fa fa-moon" id="themeIcon"></i>
+    </button>
+    <div class="avatar" id="avatarBtn">AK</div>
+  </div>
+</header>
+
+<!-- ========= LAYOUT ========= -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="nav-menu">
+      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <i class="fa fa-gauge-high"></i><span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-page="portfolio" onclick="navigate('portfolio')">
+        <i class="fa fa-briefcase"></i><span>Portfolio</span>
+      </a>
+      <a class="nav-item" data-page="market" onclick="navigate('market')">
+        <i class="fa fa-chart-candlestick"></i><span>Live Market</span>
+      </a>
+      <a class="nav-item" data-page="bot" onclick="navigate('bot')">
+        <i class="fa fa-robot"></i><span>Algo Bot</span>
+      </a>
+      <a class="nav-item" data-page="history" onclick="navigate('history')">
+        <i class="fa fa-clock-rotate-left"></i><span>Trade History</span>
+      </a>
+      <a class="nav-item" data-page="announcements" onclick="navigate('announcements')">
+        <i class="fa fa-bullhorn"></i><span>Announcements</span>
+      </a>
+      <a class="nav-item" data-page="account" onclick="navigate('account')">
+        <i class="fa fa-wallet"></i><span>Account</span>
+      </a>
+      <a class="nav-item" data-page="settings" onclick="navigate('settings')">
+        <i class="fa fa-gear"></i><span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="ver">v2.0 • NSE Live</span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2 class="page-title">Dashboard</h2>
+        <span class="page-sub" id="dashDate"></span>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fa fa-wallet"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Portfolio Value</span>
+            <span class="stat-val" id="statPortfolio">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fa fa-indian-rupee-sign"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Available Cash</span>
+            <span class="stat-val" id="statCash">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" id="pnlIcon"><i class="fa fa-chart-line"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total P&amp;L</span>
+            <span class="stat-val" id="statPnl">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fa fa-percent"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Return %</span>
+            <span class="stat-val" id="statReturn">0.00%</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fa fa-arrow-right-arrow-left"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total Trades</span>
+            <span class="stat-val" id="statTrades">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon teal"><i class="fa fa-robot"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Bot Status</span>
+            <span class="stat-val" id="statBotStatus">Idle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <span class="chart-title">Portfolio Performance</span>
+            <div class="chart-actions">
+              <button class="chip active" onclick="setPerfPeriod('7d',this)">7D</button>
+              <button class="chip" onclick="setPerfPeriod('1m',this)">1M</button>
+              <button class="chip" onclick="setPerfPeriod('3m',this)">3M</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="perfChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card narrow">
+          <div class="chart-header">
+            <span class="chart-title">Sector Allocation</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="sectorChart"></canvas>
+          </div>
+          <div class="legend-wrap" id="sectorLegend"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="dash-bottom">
+        <!-- Active Strategies -->
+        <div class="dash-card">
+          <h3 class="dc-title"><i class="fa fa-robot"></i> Active Strategies</h3>
+          <div id="activeStrategiesList" class="strategies-list">
+            <div class="empty-state">No active strategies. Start a bot from the Algo Bot page.</div>
+          </div>
+        </div>
+
+        <!-- Top Movers -->
+        <div class="dash-card">
+          <h3 class="dc-title"><i class="fa fa-fire"></i> Top Movers</h3>
+          <div id="topMovers" class="movers-list"></div>
+        </div>
+
+        <!-- Recent Trades -->
+        <div class="dash-card">
+          <h3 class="dc-title"><i class="fa fa-clock-rotate-left"></i> Recent Trades</h3>
+          <div id="recentTradesList" class="recent-trades"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PORTFOLIO PAGE ===== -->
+    <section class="page" id="page-portfolio">
+      <div class="page-header">
+        <h2 class="page-title">Portfolio</h2>
+        <button class="btn-primary" onclick="navigate('market')">
+          <i class="fa fa-plus"></i> Add Position
+        </button>
+      </div>
+
+      <!-- Portfolio Stats -->
+      <div class="stats-grid small" id="portStatsGrid">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fa fa-coins"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Invested</span>
+            <span class="stat-val" id="portInvested">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fa fa-chart-pie"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Current Value</span>
+            <span class="stat-val" id="portCurrent">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" id="portPnlIcon"><i class="fa fa-indian-rupee-sign"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Unrealised P&amp;L</span>
+            <span class="stat-val" id="portPnl">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fa fa-percent"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Day Change</span>
+            <span class="stat-val" id="portDayChg">0.00%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Holdings Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Holdings</span>
+          <span class="table-sub" id="holdingsCount">0 positions</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="holdingsTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>Qty</th>
+                <th>Avg Price</th>
+                <th>LTP</th>
+                <th>Value</th>
+                <th>P&amp;L</th>
+                <th>P&amp;L %</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsTbody">
+              <tr><td colspan="10" class="empty-row">No holdings yet. Buy stocks from Live Market.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LIVE MARKET PAGE ===== -->
+    <section class="page" id="page-market">
+      <div class="page-header">
+        <h2 class="page-title">Live Market</h2>
+        <div class="page-header-right">
+          <div class="search-wrap">
+            <i class="fa fa-magnifying-glass"></i>
+            <input type="text" id="stockSearch" placeholder="Search stocks…" oninput="filterStocks(this.value)" />
+          </div>
+          <select id="sectorFilter" onchange="filterStocks(document.getElementById('stockSearch').value)">
+            <option value="">All Sectors</option>
+            <option value="Technology">Technology</option>
+            <option value="Banking">Banking</option>
+            <option value="NBFC">NBFC</option>
+            <option value="Energy">Energy</option>
+            <option value="Automobile">Automobile</option>
+            <option value="FMCG">FMCG</option>
+            <option value="Pharma">Pharma</option>
+            <option value="Metals">Metals</option>
+            <option value="Infrastructure">Infrastructure</option>
+            <option value="Telecom">Telecom</option>
+            <option value="Media">Media</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="data-table market-table" id="marketTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>LTP</th>
+                <th>Change</th>
+                <th>Chg %</th>
+                <th>Open</th>
+                <th>High</th>
+                <th>Low</th>
+                <th>Volume</th>
+                <th>52W H</th>
+                <th>52W L</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="marketTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ALGO BOT PAGE ===== -->
+    <section class="page" id="page-bot">
+      <div class="page-header">
+        <h2 class="page-title">Algo Bot</h2>
+        <div class="bot-global-status" id="botGlobalStatus">
+          <span class="status-dot" id="botStatusDot"></span>
+          <span id="botStatusText">Bot Idle</span>
+        </div>
+      </div>
+
+      <div class="bot-stats-row" id="botStatsRow">
+        <div class="stat-card mini">
+          <div class="stat-info">
+            <span class="stat-label">Bot Trades</span>
+            <span class="stat-val" id="botTrades">0</span>
+          </div>
+        </div>
+        <div class="stat-card mini">
+          <div class="stat-info">
+            <span class="stat-label">Bot P&amp;L</span>
+            <span class="stat-val" id="botPnl">₹0.00</span>
+          </div>
+        </div>
+        <div class="stat-card mini">
+          <div class="stat-info">
+            <span class="stat-label">Win Rate</span>
+            <span class="stat-val" id="botWinRate">0%</span>
+          </div>
+        </div>
+        <div class="stat-card mini">
+          <div class="stat-info">
+            <span class="stat-label">Active Strategy</span>
+            <span class="stat-val" id="botActiveStrategy">None</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="strategies-grid" id="strategiesGrid"></div>
+
+      <div class="bot-log-card">
+        <div class="table-header">
+          <span class="table-title"><i class="fa fa-terminal"></i> Bot Activity Log</span>
+          <button class="btn-ghost small" onclick="clearBotLog()">Clear</button>
+        </div>
+        <div class="bot-log" id="botLog">
+          <div class="log-entry">System ready. Select a strategy to start trading.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TRADE HISTORY PAGE ===== -->
+    <section class="page" id="page-history">
+      <div class="page-header">
+        <h2 class="page-title">Trade History</h2>
+        <div class="page-header-right">
+          <button class="btn-ghost" onclick="exportTrades('csv')"><i class="fa fa-file-csv"></i> CSV</button>
+          <button class="btn-ghost" onclick="exportTrades('json')"><i class="fa fa-file-code"></i> JSON</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <input type="text" id="histSearch" placeholder="Search symbol…" oninput="renderHistory()" />
+        <select id="histType" onchange="renderHistory()">
+          <option value="">All Types</option>
+          <option value="BUY">Buy</option>
+          <option value="SELL">Sell</option>
+        </select>
+        <select id="histSource" onchange="renderHistory()">
+          <option value="">All Sources</option>
+          <option value="Manual">Manual</option>
+          <option value="Bot">Bot</option>
+        </select>
+        <input type="date" id="histFrom" onchange="renderHistory()" />
+        <input type="date" id="histTo" onchange="renderHistory()" />
+        <button class="btn-ghost small" onclick="clearHistoryFilters()">Clear</button>
+      </div>
+
+      <!-- Summary Row -->
+      <div class="stats-grid small" id="histStatsGrid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Total Trades</span>
+            <span class="stat-val" id="histTotal">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Buy Trades</span>
+            <span class="stat-val" id="histBuys">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Sell Trades</span>
+            <span class="stat-val" id="histSells">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Realised P&amp;L</span>
+            <span class="stat-val" id="histPnl">₹0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="data-table" id="historyTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date &amp; Time</th>
+                <th>Symbol</th>
+                <th>Type</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Value</th>
+                <th>Source</th>
+                <th>P&amp;L</th>
+              </tr>
+            </thead>
+            <tbody id="historyTbody">
+              <tr><td colspan="9" class="empty-row">No trades yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ANNOUNCEMENTS PAGE ===== -->
+    <section class="page" id="page-announcements">
+      <div class="page-header">
+        <h2 class="page-title">Announcements</h2>
+        <div class="page-header-right">
+          <select id="annFilter" onchange="renderAnnouncements()">
+            <option value="">All Types</option>
+            <option value="Earnings">Earnings</option>
+            <option value="Dividend">Dividend</option>
+            <option value="Board Meeting">Board Meeting</option>
+            <option value="Bonus">Bonus</option>
+            <option value="Split">Split</option>
+            <option value="Buyback">Buyback</option>
+            <option value="Corporate">Corporate</option>
+          </select>
+        </div>
+      </div>
+      <div class="announcements-grid" id="announcementsGrid"></div>
+    </section>
+
+    <!-- ===== ACCOUNT PAGE ===== -->
+    <section class="page" id="page-account">
+      <div class="page-header">
+        <h2 class="page-title">Account</h2>
+      </div>
+
+      <div class="account-grid">
+        <div class="acc-card big">
+          <div class="acc-header">
+            <div class="acc-avatar">AK</div>
+            <div class="acc-details">
+              <h3 class="acc-name">Aryan Kumar</h3>
+              <p class="acc-email">aryan@finoexpert.in</p>
+              <span class="badge-pro">PRO</span>
+            </div>
+          </div>
+          <div class="acc-stats">
+            <div class="acc-stat">
+              <span class="acc-stat-label">Account No.</span>
+              <span class="acc-stat-val">FE-2025-AK-001</span>
+            </div>
+            <div class="acc-stat">
+              <span class="acc-stat-label">Member Since</span>
+              <span class="acc-stat-val">Jan 2025</span>
+            </div>
+            <div class="acc-stat">
+              <span class="acc-stat-label">KYC Status</span>
+              <span class="acc-stat-val green-text">✓ Verified</span>
+            </div>
+            <div class="acc-stat">
+              <span class="acc-stat-label">Segment</span>
+              <span class="acc-stat-val">NSE Equity</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-card">
+          <h3 class="acc-sec-title"><i class="fa fa-wallet"></i> Fund Overview</h3>
+          <div class="fund-stats">
+            <div class="fund-stat">
+              <span>Available Balance</span>
+              <span class="fund-val" id="accBalance">₹0.00</span>
+            </div>
+            <div class="fund-stat">
+              <span>Invested Amount</span>
+              <span class="fund-val" id="accInvested">₹0.00</span>
+            </div>
+            <div class="fund-stat">
+              <span>Portfolio Value</span>
+              <span class="fund-val" id="accPortfolio">₹0.00</span>
+            </div>
+            <div class="fund-stat highlight">
+              <span>Total Wealth</span>
+              <span class="fund-val" id="accWealth">₹0.00</span>
+            </div>
+          </div>
+          <div class="fund-actions">
+            <button class="btn-primary" onclick="openFundModal('deposit')">
+              <i class="fa fa-arrow-down"></i> Deposit
+            </button>
+            <button class="btn-danger" onclick="openFundModal('withdraw')">
+              <i class="fa fa-arrow-up"></i> Withdraw
+            </button>
+            <button class="btn-ghost" onclick="confirmResetBalance()">
+              <i class="fa fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="acc-card">
+          <h3 class="acc-sec-title"><i class="fa fa-chart-bar"></i> Trading Stats</h3>
+          <div class="fund-stats">
+            <div class="fund-stat">
+              <span>Total Trades</span>
+              <span class="fund-val" id="accTrades">0</span>
+            </div>
+            <div class="fund-stat">
+              <span>Buy Trades</span>
+              <span class="fund-val" id="accBuys">0</span>
+            </div>
+            <div class="fund-stat">
+              <span>Sell Trades</span>
+              <span class="fund-val" id="accSells">0</span>
+            </div>
+            <div class="fund-stat highlight">
+              <span>Realised P&amp;L</span>
+              <span class="fund-val" id="accPnl">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS PAGE ===== -->
+    <section class="page" id="page-settings">
+      <div class="page-header">
+        <h2 class="page-title">Settings</h2>
+      </div>
+
+      <div class="settings-grid">
+
+        <div class="settings-card">
+          <h3 class="settings-section">Appearance</h3>
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-label">Theme</span>
+              <span class="settings-desc">Toggle between dark and light mode</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="themeToggleSettings" onchange="toggleThemeFromSettings(this)" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="theme-preview">
+            <div class="preview-dark" onclick="setTheme('dark')">
+              <i class="fa fa-moon"></i> Dark
+            </div>
+            <div class="preview-light" onclick="setTheme('light')">
+              <i class="fa fa-sun"></i> Light
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3 class="settings-section">Data &amp; Updates</h3>
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-label">Price Refresh Interval</span>
+              <span class="settings-desc">How often prices update</span>
+            </div>
+            <select id="refreshInterval" onchange="updateRefreshInterval(this.value)">
+              <option value="1000">1 second</option>
+              <option value="2000" selected>2 seconds</option>
+              <option value="5000">5 seconds</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-label">Sound Alerts</span>
+              <span class="settings-desc">Play sound on trade execution</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="soundAlerts" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3 class="settings-section">Export Data</h3>
+          <div class="export-btns">
+            <button class="btn-primary" onclick="exportTrades('csv')">
+              <i class="fa fa-file-csv"></i> Export Trades as CSV
+            </button>
+            <button class="btn-ghost" onclick="exportTrades('json')">
+              <i class="fa fa-file-code"></i> Export Trades as JSON
+            </button>
+            <button class="btn-ghost" onclick="exportPortfolio()">
+              <i class="fa fa-file-export"></i> Export Portfolio
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-card danger-zone">
+          <h3 class="settings-section red-text">Danger Zone</h3>
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-label">Reset All Data</span>
+              <span class="settings-desc">Delete all trades, portfolio, and reset balance to ₹0</span>
+            </div>
+            <button class="btn-danger" onclick="resetAllData()">Reset All</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ========= TRADE MODAL ========= -->
+<div class="modal-overlay" id="tradeModal" onclick="closeModal('tradeModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="tradeModalTitle">Place Order</h3>
+      <button class="modal-close" onclick="closeModal('tradeModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="trade-info">
+        <div class="ti-row">
+          <span>Symbol</span><strong id="tm-symbol">--</strong>
+        </div>
+        <div class="ti-row">
+          <span>Company</span><span id="tm-company">--</span>
+        </div>
+        <div class="ti-row">
+          <span>LTP</span><strong id="tm-ltp" class="green-text">--</strong>
+        </div>
+        <div class="ti-row" id="tm-holdingRow" style="display:none;">
+          <span>Holdings</span><span id="tm-holdings">0 shares</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Order Type</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="orderType" value="MARKET" checked onchange="updateTradeValue()" /> Market
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="orderType" value="LIMIT" onchange="updateTradeValue()" /> Limit
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="limitPriceGroup" style="display:none;">
+        <label>Limit Price (₹)</label>
+        <input type="number" id="limitPrice" min="0.01" step="0.05" oninput="updateTradeValue()" />
+      </div>
+
+      <div class="form-group">
+        <label>Quantity</label>
+        <div class="qty-control">
+          <button onclick="adjustQty(-1)" class="qty-btn">−</button>
+          <input type="number" id="tradeQty" value="1" min="1" oninput="updateTradeValue()" />
+          <button onclick="adjustQty(1)" class="qty-btn">+</button>
+        </div>
+      </div>
+
+      <div class="trade-summary">
+        <div class="ts-row">
+          <span>Estimated Value</span>
+          <strong id="tm-value">₹0.00</strong>
+        </div>
+        <div class="ts-row" id="tm-balanceRow">
+          <span>Available Balance</span>
+          <span id="tm-balance">₹0.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('tradeModal')">Cancel</button>
+      <button class="btn-primary" id="tradeSubmitBtn" onclick="submitTrade()">Buy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= FUND MODAL ========= -->
+<div class="modal-overlay" id="fundModal" onclick="closeModal('fundModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="fundModalTitle">Deposit Funds</h3>
+      <button class="modal-close" onclick="closeModal('fundModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-amounts">
+        <button class="chip" onclick="setFundAmount(10000)">₹10K</button>
+        <button class="chip" onclick="setFundAmount(25000)">₹25K</button>
+        <button class="chip" onclick="setFundAmount(50000)">₹50K</button>
+        <button class="chip" onclick="setFundAmount(100000)">₹1L</button>
+        <button class="chip" onclick="setFundAmount(500000)">₹5L</button>
+      </div>
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="fundAmount" placeholder="Enter amount" min="1" />
+      </div>
+      <div class="fund-info">
+        <div class="ts-row">
+          <span>Current Balance</span>
+          <strong id="fm-balance">₹0.00</strong>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('fundModal')">Cancel</button>
+      <button class="btn-primary" id="fundSubmitBtn" onclick="submitFund()">Deposit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= TOAST ========= -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="app.js"></script>
 </body>
 </html>
