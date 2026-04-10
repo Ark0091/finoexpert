@@ -837,7 +837,7 @@ input:focus, select:focus {
 }
 .ann-Earnings    { background: rgba(63,185,80,0.15);   color: var(--accent-green); }
 .ann-Dividend    { background: rgba(31,111,235,0.12);  color: var(--accent-blue-light); }
-.ann-Board\ Meeting { background: rgba(137,87,229,0.12); color: var(--accent-purple); }
+.ann-Board-Meeting { background: rgba(137,87,229,0.12); color: var(--accent-purple); }
 .ann-Bonus       { background: rgba(210,153,34,0.12);  color: var(--accent-orange); }
 .ann-Split       { background: rgba(57,211,187,0.12);  color: var(--accent-teal); }
 .ann-Buyback     { background: rgba(248,81,73,0.1);    color: var(--accent-red); }

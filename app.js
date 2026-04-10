@@ -78,7 +78,7 @@ const INDICES = {
 const ANNOUNCEMENTS_DATA = [
   { type:'Earnings',      company:'TCS',        sym:'TCS',       date:'10 Apr 2025', title:'Q4 FY25 Results – Net Profit ₹12,380 Cr', body:'TCS reported a net profit of ₹12,380 crore for Q4FY25, up 4.5% YoY. Revenue grew 5.1% to ₹63,973 crore. The board declared a final dividend of ₹28/share.' },
   { type:'Dividend',      company:'HDFC Bank',  sym:'HDFCBANK',  date:'09 Apr 2025', title:'Final Dividend of ₹19.50 per share', body:'HDFC Bank declared a final dividend of ₹19.50 per equity share. Record date is 18 April 2025. Payment date is 05 May 2025.' },
-  { type:'Board Meeting', company:'Reliance',   sym:'RELIANCE',  date:'08 Apr 2025', title:'Board Meeting to consider Q4 FY25 Results', body:'A meeting of the Board of Directors of Reliance Industries Limited is scheduled on 25 April 2025 to consider and approve the audited financial results for Q4/FY25.' },
+  { type:'Board-Meeting', company:'Reliance',   sym:'RELIANCE',  date:'08 Apr 2025', title:'Board Meeting to consider Q4 FY25 Results', body:'A meeting of the Board of Directors of Reliance Industries Limited is scheduled on 25 April 2025 to consider and approve the audited financial results for Q4/FY25.' },
   { type:'Bonus',         company:'Infosys',    sym:'INFY',      date:'07 Apr 2025', title:'Bonus Issue 1:1 Approved', body:'Infosys board has approved a bonus issue of one equity share for every one share held. Record date will be announced separately. This is subject to shareholder approval.' },
   { type:'Earnings',      company:'ICICI Bank', sym:'ICICIBANK', date:'07 Apr 2025', title:'Q4 FY25 PAT up 14% at ₹11,792 Cr', body:'ICICI Bank posted a standalone net profit of ₹11,792 crore for Q4FY25, up 14.5% YoY. Net NPA fell to 0.39%. NII grew 11.2% to ₹21,193 crore.' },
   { type:'Split',         company:'Maruti',     sym:'MARUTI',    date:'06 Apr 2025', title:'Stock Split 5:1 – Record Date 22 April', body:'Maruti Suzuki has fixed 22 April 2025 as the record date for the 5:1 stock split. Post-split face value changes from ₹5 to ₹1 per share.' },
@@ -86,7 +86,7 @@ const ANNOUNCEMENTS_DATA = [
   { type:'Corporate',     company:'Bajaj Finance',sym:'BAJFINANCE',date:'04 Apr 2025',title:'Acquires 26% stake in PayNow Fintech', body:'Bajaj Finance Limited announced the acquisition of a 26% strategic stake in PayNow Fintech Pvt Ltd for ₹320 crore. This will strengthen its digital lending vertical.' },
   { type:'Dividend',      company:'ITC',        sym:'ITC',       date:'03 Apr 2025', title:'Interim Dividend of ₹6.75 per share', body:'ITC Limited declared an interim dividend of ₹6.75 per equity share. The record date is 15 April 2025. Dividend will be paid within 30 days of record date.' },
   { type:'Earnings',      company:'Wipro',      sym:'WIPRO',     date:'02 Apr 2025', title:'Q4 FY25 IT Services Revenue $2.63 Bn', body:'Wipro reported IT Services revenue of $2.63 billion for Q4FY25, up 1.3% QoQ. The company guided for 1.5–3.5% QoQ growth for Q1FY26. PAT at ₹3,570 crore.' },
-  { type:'Board Meeting', company:'SBI',        sym:'SBIN',      date:'01 Apr 2025', title:'AGM Scheduled for 28 June 2025', body:'State Bank of India has convened its Annual General Meeting on Saturday, 28 June 2025 at 11:00 AM. Shareholders to vote on dividend and board appointments.' },
+  { type:'Board-Meeting', company:'SBI',        sym:'SBIN',      date:'01 Apr 2025', title:'AGM Scheduled for 28 June 2025', body:'State Bank of India has convened its Annual General Meeting on Saturday, 28 June 2025 at 11:00 AM. Shareholders to vote on dividend and board appointments.' },
   { type:'Corporate',     company:'Tata Motors',sym:'TATAMOTORS',date:'31 Mar 2025',title:'JLR EV Sales Cross 50,000 Units in FY25', body:"Jaguar Land Rover, Tata Motors' subsidiary, achieved a landmark with over 50,000 EV deliveries in FY25. The Defender PHEV and Range Rover Electric drove the surge." },
 ];
 
@@ -292,6 +292,7 @@ function isMarketOpen() {
   if (day === 0 || day === 6) return false;
   const h = ist.getHours(), m = ist.getMinutes();
   const mins = h * 60 + m;
+  // 555 = 9:15 AM (market open), 930 = 3:30 PM (market close) in IST
   return mins >= 555 && mins <= 930; // 9:15 AM – 3:30 PM
 }
 
@@ -1329,7 +1330,10 @@ function saveState() {
       refreshInterval:state.refreshInterval
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch(e) { /* storage full */ }
+  } catch(e) {
+    // Storage may be full or unavailable (e.g. private browsing mode)
+    console.warn('Finoexpert: localStorage save failed:', e.message);
+  }
 }
 
 function loadState() {
@@ -1341,7 +1345,10 @@ function loadState() {
     }
     const theme = localStorage.getItem('finoexpert_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', theme);
-  } catch(e) { /* ignore */ }
+  } catch(e) {
+    // localStorage may be unavailable (private mode, quota exceeded, etc.)
+    console.warn('Finoexpert: localStorage load failed:', e.message);
+  }
 }
 
 // ============================================================
