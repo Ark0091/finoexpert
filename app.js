@@ -5,6 +5,13 @@
 // ── Constants ─────────────────────────────────────
 const STARTING_BALANCE = 100000;
 
+// Bot simulation constants
+const RSI_BASE  = 30;  // Simulated RSI lower bound (0–100 scale)
+const RSI_RANGE = 50;  // Simulated RSI upper bound offset → values fall in [30, 80]
+// MACD signal uses slight negative bias (0.48 vs 0.5) to produce marginally more
+// bearish noise, reflecting typical real-world sell pressure.
+const MACD_BIAS = 0.48;
+
 const NSE_STOCKS = [
   { symbol: 'RELIANCE',   name: 'Reliance Industries',   price: 2856.40 },
   { symbol: 'TCS',        name: 'Tata Consultancy Svcs', price: 3712.15 },
@@ -590,12 +597,12 @@ function runBotStrategy(stratIdx, sym, qty) {
       reason = `MA crossover signal: ${pct.toFixed(3)}%`;
       break;
     case 1: // RSI – oversold/overbought via random RSI simulation
-      { const rsi = 30 + Math.random() * 50;
+      { const rsi = RSI_BASE + Math.random() * RSI_RANGE;
         action = rsi < 35 ? 'buy' : rsi > 70 ? 'sell' : null;
         reason = `RSI=${rsi.toFixed(1)}`; }
       break;
     case 2: // MACD
-      { const macd = (Math.random() - 0.48) * 10;
+      { const macd = (Math.random() - MACD_BIAS) * 10;
         action = macd > 2 ? 'buy' : macd < -2 ? 'sell' : null;
         reason = `MACD=${macd.toFixed(2)}`; }
       break;
@@ -717,7 +724,7 @@ function loadState() {
     const raw = localStorage.getItem('fino_state');
     if (!raw) return;
     const saved = JSON.parse(raw);
-    if (saved.balance    != null) state.balance   = saved.balance;
+    if (saved.balance !== null && saved.balance !== undefined) state.balance = saved.balance;
     if (saved.portfolio)          state.portfolio  = saved.portfolio;
     if (saved.history)            state.history    = saved.history;
     if (saved.prices)             state.prices     = saved.prices;
