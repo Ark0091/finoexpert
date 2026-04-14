@@ -1,46 +1,67 @@
 .dashboard {
-    display: grid;
-    grid-template-columns: 1fr 4fr;
-    grid-template-rows: auto;
-    height: 100vh;
+  display: grid;
+  grid-template-areas: 
+    'header header'
+    'sidebar content'
+    'sidebar footer';
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+.header {
+  grid-area: header;
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
 }
 
 .sidebar {
-    background-color: var(--sidebar-bg);
-    color: var(--sidebar-color);
-    padding: 20px;
+  grid-area: sidebar;
+  background-color: #444;
+  color: #fff;
+  padding: 20px;
 }
 
-.main-content {
-    padding: 20px;
-    background-color: var(--main-bg);
+.content {
+  grid-area: content;
+  background-color: #555;
+  color: #fff;
+  padding: 20px;
 }
 
-.stock-card {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    padding: 15px;
-    transition: transform 0.2s;
+.footer {
+  grid-area: footer;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
 }
 
-.stock-card:hover {
-    transform: scale(1.05);
+.stats-card {
+  background-color: #666;
+  color: #fff;
+  padding: 15px;
+  margin: 10px 0;
 }
 
-.theme-light {
-    --sidebar-bg: #ffffff;
-    --sidebar-color: #000000;
-    --main-bg: #f5f5f5;
-}
-
-.theme-dark {
-    --sidebar-bg: #2d2d2d;
-    --sidebar-color: #ffffff;
-    --main-bg: #1e1e1e;
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
 }
 
 @media (max-width: 768px) {
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
+  .dashboard {
+    grid-template-areas: 
+      'header'
+      'content'
+      'footer';
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  .sidebar {
+    display: none;
+  }
 }
