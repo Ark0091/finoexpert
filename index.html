@@ -1,38 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finoexpert Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finoexpert Dashboard</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── Header / ticker bar ── */
+    #header { background: #161b22; border-bottom: 1px solid #30363d; padding: 0 20px; height: 54px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    #header .brand { font-size: 1.2rem; font-weight: 700; color: #58a6ff; letter-spacing: 1px; }
+    #ticker-bar { display: flex; gap: 28px; }
+    .ticker-item { display: flex; flex-direction: column; align-items: center; }
+    .ticker-item .t-name { font-size: 0.65rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+    .ticker-item .t-val  { font-size: 0.9rem; font-weight: 600; }
+    .ticker-item .t-chg  { font-size: 0.72rem; }
+    .up   { color: #3fb950; }
+    .down { color: #f85149; }
+
+    /* ── Layout: sidebar + main ── */
+    #layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    #sidebar { width: 200px; background: #161b22; border-right: 1px solid #30363d; display: flex; flex-direction: column; padding: 16px 0; flex-shrink: 0; }
+    #sidebar .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 22px; cursor: pointer; font-size: 0.88rem; color: #8b949e; border-left: 3px solid transparent; transition: background 0.15s, color 0.15s; }
+    #sidebar .nav-item:hover { background: #21262d; color: #c9d1d9; }
+    #sidebar .nav-item.active { background: #21262d; color: #58a6ff; border-left-color: #58a6ff; }
+    #sidebar .nav-icon { font-size: 1rem; }
+
+    /* ── Main content ── */
+    #main { flex: 1; overflow-y: auto; padding: 24px; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .section-title { font-size: 1.3rem; font-weight: 700; color: #e6edf3; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
+
+    /* ── Cards ── */
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px 20px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px 20px; }
+    .stat-card .sc-label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .stat-card .sc-value { font-size: 1.4rem; font-weight: 700; color: #e6edf3; }
+    .stat-card .sc-sub   { font-size: 0.78rem; margin-top: 4px; }
+
+    /* ── Tables ── */
+    .tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #30363d; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { background: #21262d; }
+    th { padding: 10px 14px; text-align: left; color: #8b949e; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px; }
+    td { padding: 10px 14px; border-top: 1px solid #21262d; }
+    tr:hover td { background: #1c2128; }
+
+    /* ── Forms & controls ── */
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: flex-end; }
+    label { font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 4px; }
+    select, input[type="text"], input[type="number"] {
+      background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+      padding: 8px 12px; border-radius: 6px; font-size: 0.87rem; outline: none; }
+    select:focus, input:focus { border-color: #58a6ff; }
+    select option { background: #21262d; }
+
+    /* ── Buttons ── */
+    .btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #238636; color: #fff; }
+    .btn-danger  { background: #da3633; color: #fff; }
+    .btn-blue    { background: #1f6feb; color: #fff; }
+    .btn-gray    { background: #30363d; color: #c9d1d9; }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+
+    /* ── Market section stock cards ── */
+    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stock-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 16px; }
+    .stock-card .sc-sym  { font-size: 0.95rem; font-weight: 700; color: #e6edf3; }
+    .stock-card .sc-price{ font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
+    .stock-card .sc-chg  { font-size: 0.78rem; margin-top: 2px; }
+    .stock-card .sc-btns { display: flex; gap: 6px; margin-top: 10px; }
+
+    /* ── Bot section ── */
+    .bot-log { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-size: 0.8rem; font-family: monospace; height: 200px; overflow-y: auto; color: #3fb950; margin-top: 12px; }
+
+    /* ── Toast ── */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #238636; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; display: none; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    #toast.err { background: #da3633; }
+
+    /* ── Announcements ── */
+    .ann-item { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+    .ann-item .ann-title { font-weight: 600; color: #e6edf3; margin-bottom: 4px; }
+    .ann-item .ann-meta  { font-size: 0.75rem; color: #8b949e; }
+    .ann-item .ann-body  { margin-top: 8px; font-size: 0.85rem; color: #c9d1d9; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0d1117; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+    /* ── Account ── */
+    .acc-info { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+
+    /* ── Settings ── */
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #21262d; }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 0.9rem; color: #c9d1d9; }
+    .setting-desc  { font-size: 0.75rem; color: #8b949e; margin-top: 2px; }
+    .toggle { position: relative; width: 42px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #30363d; border-radius: 22px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider::before { content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition: transform 0.2s; }
+    .toggle input:checked + .toggle-slider { background: #238636; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    @media (max-width: 640px) {
+      #sidebar { width: 52px; }
+      #sidebar .nav-item span { display: none; }
+      #sidebar .nav-item { justify-content: center; padding: 11px 0; }
+      .acc-info { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Navigation</h2>
-        <ul>
-            <li><a href="#dashboard">Dashboard</a></li>
-            <li><a href="#portfolio">Portfolio</a></li>
-            <li><a href="#market">Market</a></li>
-            <li><a href="#bot">Bot</a></li>
-            <li><a href="#history">History</a></li>
-            <li><a href="#announcements">Announcements</a></li>
-            <li><a href="#account">Account</a></li>
-            <li><a href="#settings">Settings</a></li>
-        </ul>
+
+<!-- ═══ HEADER ═══ -->
+<header id="header">
+  <div class="brand">📈 Finoexpert</div>
+  <div id="ticker-bar">
+    <div class="ticker-item">
+      <span class="t-name">SENSEX</span>
+      <span class="t-val" id="tk-sensex">73,412</span>
+      <span class="t-chg up" id="tk-sensex-chg">▲ 0.00%</span>
     </div>
-    <div class="header">
-        <h1>Market Tickers</h1>
+    <div class="ticker-item">
+      <span class="t-name">NIFTY 50</span>
+      <span class="t-val" id="tk-nifty">22,186</span>
+      <span class="t-chg up" id="tk-nifty-chg">▲ 0.00%</span>
     </div>
-    <div class="content">
-        <section id="dashboard">Dashboard Content</section>
-        <section id="portfolio">Portfolio Content</section>
-        <section id="market">Market Content</section>
-        <section id="bot">Bot Content</section>
-        <section id="history">History Content</section>
-        <section id="announcements">Announcements Content</section>
-        <section id="account">Account Content</section>
-        <section id="settings">Settings Content</section>
+    <div class="ticker-item">
+      <span class="t-name">VIX</span>
+      <span class="t-val" id="tk-vix">13.42</span>
+      <span class="t-chg down" id="tk-vix-chg">▼ 0.00%</span>
     </div>
-    <script src="app.js"></script>
+  </div>
+</header>
+
+<!-- ═══ LAYOUT ═══ -->
+<div id="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav id="sidebar">
+    <div class="nav-item active" data-section="dashboard">
+      <span class="nav-icon">🏠</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" data-section="portfolio">
+      <span class="nav-icon">💼</span><span>Portfolio</span>
+    </div>
+    <div class="nav-item" data-section="market">
+      <span class="nav-icon">📊</span><span>Market</span>
+    </div>
+    <div class="nav-item" data-section="bot">
+      <span class="nav-icon">🤖</span><span>Algo Bot</span>
+    </div>
+    <div class="nav-item" data-section="history">
+      <span class="nav-icon">🕐</span><span>History</span>
+    </div>
+    <div class="nav-item" data-section="announcements">
+      <span class="nav-icon">📢</span><span>News</span>
+    </div>
+    <div class="nav-item" data-section="account">
+      <span class="nav-icon">👤</span><span>Account</span>
+    </div>
+    <div class="nav-item" data-section="settings">
+      <span class="nav-icon">⚙️</span><span>Settings</span>
+    </div>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main id="main">
+
+    <!-- ════ DASHBOARD ════ -->
+    <section id="section-dashboard" class="section active">
+      <div class="section-title">Dashboard</div>
+      <div class="card-grid" id="dashboard-stats"></div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div style="font-weight:600;color:#e6edf3;margin-bottom:14px;font-size:0.95rem;">Quick Trade</div>
+        <div class="form-row">
+          <div>
+            <label>Stock</label>
+            <select id="qt-stock"></select>
+          </div>
+          <div>
+            <label>Quantity</label>
+            <input type="number" id="qt-qty" value="1" min="1" style="width:90px;" />
+          </div>
+          <button class="btn btn-primary" onclick="quickTrade('buy')">Buy</button>
+          <button class="btn btn-danger"  onclick="quickTrade('sell')">Sell</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="font-size:1rem;">Market Snapshot</div>
+      <div class="tbl-wrap">
+        <table id="dashboard-market-table">
+          <thead><tr>
+            <th>Symbol</th><th>Price (₹)</th><th>Change</th><th>% Change</th>
+          </tr></thead>
+          <tbody id="dashboard-market-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════ PORTFOLIO ════ -->
+    <section id="section-portfolio" class="section">
+      <div class="section-title">Portfolio</div>
+      <div class="card-grid" id="portfolio-stats"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Symbol</th><th>Qty</th><th>Avg Buy (₹)</th><th>Current (₹)</th><th>Invested (₹)</th><th>Value (₹)</th><th>P&amp;L (₹)</th><th>P&amp;L %</th>
+          </tr></thead>
+          <tbody id="portfolio-body"></tbody>
+        </table>
+      </div>
+      <div id="portfolio-empty" style="text-align:center;color:#8b949e;padding:40px;display:none;">No holdings yet. Start trading from the Market or Dashboard section.</div>
+    </section>
+
+    <!-- ════ MARKET ════ -->
+    <section id="section-market" class="section">
+      <div class="section-title">Market</div>
+      <div class="form-row" style="margin-bottom:16px;">
+        <div>
+          <label>Filter / Search</label>
+          <input type="text" id="market-search" placeholder="e.g. RELIANCE" oninput="renderMarket()" style="width:200px;" />
+        </div>
+      </div>
+      <div class="stock-grid" id="market-cards"></div>
+
+      <!-- Trade panel -->
+      <div class="card">
+        <div style="font-weight:600;color:#e6edf3;margin-bottom:14px;font-size:0.95rem;">Place Order</div>
+        <div class="form-row">
+          <div>
+            <label>Stock</label>
+            <select id="mkt-stock"></select>
+          </div>
+          <div>
+            <label>Quantity</label>
+            <input type="number" id="mkt-qty" value="1" min="1" style="width:90px;" />
+          </div>
+          <div>
+            <label>Order Type</label>
+            <select id="mkt-type">
+              <option value="market">Market</option>
+              <option value="limit">Limit</option>
+            </select>
+          </div>
+          <div id="mkt-limit-wrap" style="display:none;">
+            <label>Limit Price (₹)</label>
+            <input type="number" id="mkt-limit" value="0" min="0" style="width:110px;" />
+          </div>
+          <button class="btn btn-primary" onclick="placeTrade('buy')">Buy</button>
+          <button class="btn btn-danger"  onclick="placeTrade('sell')">Sell</button>
+        </div>
+        <div id="mkt-preview" style="font-size:0.82rem;color:#8b949e;margin-top:4px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ ALGO BOT ════ -->
+    <section id="section-bot" class="section">
+      <div class="section-title">Algo Bot</div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="form-row">
+          <div>
+            <label>Strategy</label>
+            <select id="bot-strategy">
+              <option value="0">Moving Average Crossover</option>
+              <option value="1">RSI Strategy</option>
+              <option value="2">MACD Strategy</option>
+              <option value="3">Bollinger Bands</option>
+              <option value="4">Momentum Strategy</option>
+              <option value="5">Mean Reversion</option>
+              <option value="6">Trend Following</option>
+              <option value="7">Volume-based Strategy</option>
+              <option value="8">Breakout Strategy</option>
+            </select>
+          </div>
+          <div>
+            <label>Stock</label>
+            <select id="bot-stock"></select>
+          </div>
+          <div>
+            <label>Trade Qty</label>
+            <input type="number" id="bot-qty" value="5" min="1" style="width:80px;" />
+          </div>
+          <div>
+            <label>Interval (sec)</label>
+            <input type="number" id="bot-interval" value="5" min="2" max="60" style="width:80px;" />
+          </div>
+          <button class="btn btn-primary" id="bot-start-btn" onclick="startBot()">▶ Start Bot</button>
+          <button class="btn btn-danger"  id="bot-stop-btn"  onclick="stopBot()" style="display:none;">⏹ Stop Bot</button>
+        </div>
+        <div style="font-size:0.8rem;color:#8b949e;" id="bot-status-txt">Status: Idle</div>
+      </div>
+      <div style="font-size:0.82rem;color:#8b949e;margin-bottom:6px;">Bot Activity Log</div>
+      <div class="bot-log" id="bot-log">[Bot log will appear here once started...]</div>
+    </section>
+
+    <!-- ════ HISTORY ════ -->
+    <section id="section-history" class="section">
+      <div class="section-title">Trade History</div>
+      <div class="form-row" style="margin-bottom:16px;">
+        <button class="btn btn-blue btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-gray btn-sm" onclick="exportJSON()">⬇ Export JSON</button>
+        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑 Clear History</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Date &amp; Time</th><th>Action</th><th>Symbol</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th><th>Balance After (₹)</th>
+          </tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <div id="history-empty" style="text-align:center;color:#8b949e;padding:40px;display:none;">No trades yet.</div>
+    </section>
+
+    <!-- ════ ANNOUNCEMENTS ════ -->
+    <section id="section-announcements" class="section">
+      <div class="section-title">Market News &amp; Announcements</div>
+      <div id="announcements-list"></div>
+    </section>
+
+    <!-- ════ ACCOUNT ════ -->
+    <section id="section-account" class="section">
+      <div class="section-title">Account</div>
+      <div class="acc-info" id="account-stats"></div>
+
+      <div class="card" style="margin-bottom:20px;max-width:380px;">
+        <div style="font-weight:600;color:#e6edf3;margin-bottom:12px;">Add Simulated Funds</div>
+        <div class="form-row">
+          <div>
+            <label>Amount (₹)</label>
+            <input type="number" id="add-funds-amt" value="50000" min="1000" style="width:140px;" />
+          </div>
+          <button class="btn btn-primary" onclick="addFunds()">Add Funds</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:380px;">
+        <div style="font-weight:600;color:#e6edf3;margin-bottom:12px;">Account Details</div>
+        <table style="width:100%;font-size:0.85rem;">
+          <tr><td style="color:#8b949e;padding:6px 0;">Account ID</td><td style="padding:6px 0;">FINO-00001</td></tr>
+          <tr><td style="color:#8b949e;padding:6px 0;">Name</td><td style="padding:6px 0;">Demo Trader</td></tr>
+          <tr><td style="color:#8b949e;padding:6px 0;">Segment</td><td style="padding:6px 0;">NSE Equity</td></tr>
+          <tr><td style="color:#8b949e;padding:6px 0;">Exchange</td><td style="padding:6px 0;">NSE</td></tr>
+          <tr><td style="color:#8b949e;padding:6px 0;">Status</td><td style="padding:6px 0;"><span style="color:#3fb950;">● Active</span></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════ SETTINGS ════ -->
+    <section id="section-settings" class="section">
+      <div class="section-title">Settings</div>
+      <div class="card" style="max-width:520px;">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Price Volatility</div>
+            <div class="setting-desc">Controls simulated price movement range (%)</div>
+          </div>
+          <select id="setting-volatility" onchange="applySettings()">
+            <option value="0.5">Low (±0.5%)</option>
+            <option value="1.5" selected>Medium (±1.5%)</option>
+            <option value="3">High (±3%)</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Trade Notifications</div>
+            <div class="setting-desc">Show toast alerts on every trade</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setting-notify" checked onchange="applySettings()" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Live Price Updates</div>
+            <div class="setting-desc">Auto-refresh prices every few seconds</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setting-live" checked onchange="applySettings()" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Reset Portfolio</div>
+            <div class="setting-desc">Wipe all trades and restore ₹1,00,000 balance</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="resetPortfolio()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="app.js"></script>
 </body>
 </html>
