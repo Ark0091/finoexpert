@@ -1,67 +1,85 @@
 // app.js
 
-// NPM Packages
-const fetch = require('node-fetch');
+// Fetch NSE prices from Yahoo Finance API
+async function fetchNSEPrices() {
+    const response = await fetch('https://finance.yahoo.com/quote/%5ENSEI', { method: 'GET' });
+    const data = await response.json();
+    return {  
+        sensex: data.price.regularMarketPrice,
+        nifty50: data.quoteSummary["NSE:NIFTY"]?.price?.regularMarketPrice || 0,
+        vix: data.quoteSummary["NSE:VIX"]?.price?.regularMarketPrice || 0
+    };
+};
 
-// Constants and Configuration
-const NSE_API_URL = 'https://api.nseindia.com/api/option-chain-indices';
+// Trading logic
+let portfolio = [];
+let tradeHistory = [];
+let balance = 100000; // Starting balance
 
-// Theme Management
-let isDarkMode = localStorage.getItem('theme') === 'dark';
-
-// Function to toggle theme
-function toggleTheme() {
-    isDarkMode = !isDarkMode;
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    document.body.className = isDarkMode ? 'dark' : 'light';
+function buy(stock, amount) {
+    portfolio.push({ stock, amount });
+    tradeHistory.push({ type: 'buy', stock, amount, date: new Date() });
+    balance -= amount;
 }
 
-// Stock API Integration
-async function fetchStockPrices(stockSymbols) {
-    const responses = await Promise.all(stockSymbols.map(symbol =>
-        fetch(`${NSE_API_URL}?symbol=${symbol}`)
-    ));
-    const data = await Promise.all(responses.map(res => res.json()));
-    return data;
-}
-
-// Portfolio Management Class
-class Portfolio {
-    constructor() {
-        this.stocks = JSON.parse(localStorage.getItem('portfolio')) || [];
-    }
-
-    addStock(symbol, quantity) {
-        this.stocks.push({ symbol, quantity });
-        this.save();
-    }
-
-    removeStock(symbol) {
-        this.stocks = this.stocks.filter(stock => stock.symbol !== symbol);
-        this.save();
-    }
-
-    save() {
-        localStorage.setItem('portfolio', JSON.stringify(this.stocks));
+function sell(stock, amount) {
+    const index = portfolio.findIndex(item => item.stock === stock);
+    if(index >= 0) {
+        portfolio.splice(index, 1);
+        tradeHistory.push({ type: 'sell', stock, amount, date: new Date() });
+        balance += amount;
     }
 }
 
-// Trading Logic and Strategies
-// Define various trading strategies here
+// Algo bot strategies
+const algoBots = {
+    bot1: function() { /* strategy implementation */ },
+    bot2: function() { /* strategy implementation */ },
+    // Additional bots can be added here
+};
 
-// Example of algorithm 1
-function exampleTradingStrategy(stockData) {
-    // Implementation of a trading strategy
+// Data export
+function exportData(format) {
+    const data = { portfolio, tradeHistory, balance };
+    let exportedData;  
+    if(format === 'CSV') {
+        exportedData = toCSV(data);
+    } else {
+        exportedData = JSON.stringify(data);
+    }
+    return exportedData;
 }
 
-// Initialize the application
-function initApp() {
-    toggleTheme();
-    const stockSymbols = ['RELIANCE', 'TCS', 'INFY']; // Example stock symbols
-    fetchStockPrices(stockSymbols).then(stockData => {
-        console.log(stockData); // Process and display stock data
-    });
+function toCSV(data) {
+    // Logic for converting JSON to CSV
+    return ''; // Placeholder
 }
 
-// Run the application
-initApp();
+// Local storage persistence
+function saveToLocalStorage() {
+    localStorage.setItem('portfolio', JSON.stringify(portfolio));
+    localStorage.setItem('tradeHistory', JSON.stringify(tradeHistory));
+}
+
+// Load data from local storage
+function loadFromLocalStorage() {
+    portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
+    tradeHistory = JSON.parse(localStorage.getItem('tradeHistory')) || [];
+}
+
+// Dark mode toggle
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+// Event handlers
+document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+// Fetching prices
+fetchNSEPrices().then(prices => {
+    console.log(prices);
+    // Update UI with fetched prices
+});
+
+// Load existing data on startup
+loadFromLocalStorage();
