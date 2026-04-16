@@ -3,36 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finoexpert Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Finoexpert Trading Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --muted: #94a3b8;
+            --text: #e2e8f0;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: #0b1220;
+            border-right: 1px solid var(--border);
+            padding: 20px;
+        }
+        .brand { margin: 0 0 18px; font-size: 20px; }
+        .nav-btn {
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .nav-btn:hover, .nav-btn.active { border-color: var(--accent); }
+        .main { padding: 16px 22px; }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ticker-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .ticker {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            min-width: 130px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .section { display: none; }
+        .section.active { display: block; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid var(--border); padding: 8px; text-align: left; }
+        input, select, button {
+            background: #0b1220;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+        }
+        button { cursor: pointer; }
+        .success { color: var(--success); }
+        .danger { color: var(--danger); }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .muted { color: var(--muted); }
+    </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Navigation</h2>
-        <ul>
-            <li><a href="#dashboard">Dashboard</a></li>
-            <li><a href="#portfolio">Portfolio</a></li>
-            <li><a href="#market">Market</a></li>
-            <li><a href="#bot">Bot</a></li>
-            <li><a href="#history">History</a></li>
-            <li><a href="#announcements">Announcements</a></li>
-            <li><a href="#account">Account</a></li>
-            <li><a href="#settings">Settings</a></li>
-        </ul>
-    </div>
-    <div class="header">
-        <h1>Market Tickers</h1>
-    </div>
-    <div class="content">
-        <section id="dashboard">Dashboard Content</section>
-        <section id="portfolio">Portfolio Content</section>
-        <section id="market">Market Content</section>
-        <section id="bot">Bot Content</section>
-        <section id="history">History Content</section>
-        <section id="announcements">Announcements Content</section>
-        <section id="account">Account Content</section>
-        <section id="settings">Settings Content</section>
-    </div>
+    <aside class="sidebar">
+        <h2 class="brand">Finoexpert</h2>
+        <button class="nav-btn active" data-section="dashboard" onclick="switchSection('dashboard')">Dashboard</button>
+        <button class="nav-btn" data-section="portfolio" onclick="switchSection('portfolio')">Portfolio</button>
+        <button class="nav-btn" data-section="market" onclick="switchSection('market')">Market</button>
+        <button class="nav-btn" data-section="bot" onclick="switchSection('bot')">Bot</button>
+        <button class="nav-btn" data-section="history" onclick="switchSection('history')">History</button>
+        <button class="nav-btn" data-section="announcements" onclick="switchSection('announcements')">Announcements</button>
+        <button class="nav-btn" data-section="account" onclick="switchSection('account')">Account</button>
+        <button class="nav-btn" data-section="settings" onclick="switchSection('settings')">Settings</button>
+    </aside>
+
+    <main class="main">
+        <header class="header">
+            <div>
+                <h1 style="margin:0;">Trading Dashboard</h1>
+                <div class="muted">Balance: <strong id="balanceDisplay">₹0.00</strong></div>
+            </div>
+            <div class="ticker-row">
+                <div class="ticker"><strong>SENSEX</strong><div id="sensexTicker">Loading...</div></div>
+                <div class="ticker"><strong>NIFTY 50</strong><div id="niftyTicker">Loading...</div></div>
+                <div class="ticker"><strong>VIX</strong><div id="vixTicker">Loading...</div></div>
+            </div>
+        </header>
+
+        <section id="dashboard" class="section active">
+            <div class="card grid">
+                <div><div class="muted">Portfolio Value</div><h3 id="portfolioValue">₹0.00</h3></div>
+                <div><div class="muted">Invested Amount</div><h3 id="investedValue">₹0.00</h3></div>
+                <div><div class="muted">Open Positions</div><h3 id="positionsCount">0</h3></div>
+                <div><div class="muted">Unrealized P&L</div><h3 id="overallPnl">₹0.00</h3></div>
+            </div>
+            <div class="card">
+                <h3>Quick Trade</h3>
+                <div class="row">
+                    <select id="quickSymbol"></select>
+                    <input id="quickQty" type="number" min="1" placeholder="Quantity" />
+                    <button onclick="handleBuy('quickSymbol','quickQty')">Buy</button>
+                    <button onclick="handleSell('quickSymbol','quickQty')">Sell</button>
+                </div>
+                <p id="tradeMessage" class="muted"></p>
+            </div>
+        </section>
+
+        <section id="portfolio" class="section"><div class="card"><h3>Portfolio</h3><div id="portfolioTable"></div></div></section>
+        <section id="market" class="section"><div class="card"><h3>Market Watch</h3><div id="marketTable"></div></div></section>
+        <section id="bot" class="section">
+            <div class="card"><h3>Algo Bot Strategies</h3><div id="botStrategies" class="grid"></div><p id="botOutput" class="muted"></p></div>
+        </section>
+        <section id="history" class="section"><div class="card"><h3>Trade History</h3><div class="row"><button onclick="exportToCSV()">Export CSV</button><button onclick="exportToJSON()">Export JSON</button></div><div id="historyTable"></div></div></section>
+        <section id="announcements" class="section"><div class="card"><h3>Announcements</h3><ul id="announcementList"></ul></div></section>
+        <section id="account" class="section"><div class="card"><h3>Account</h3><p>Account Name: Retail Trader</p><p>Starting Balance: ₹100,000.00</p><p>Current Balance: <span id="accountBalance">₹0.00</span></p></div></section>
+        <section id="settings" class="section"><div class="card"><h3>Settings</h3><button onclick="resetData()">Reset Account Data</button></div></section>
+    </main>
+
     <script src="app.js"></script>
 </body>
 </html>
