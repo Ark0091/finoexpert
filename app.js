@@ -178,17 +178,26 @@ function renderTickers() {
 }
 
 function renderMarket() {
-    const rows = nseStocks.map((stock) => `
+    const rows = nseStocks.map((stock, index) => `
         <tr>
             <td>${stock.symbol}</td>
             <td>${formatINR(stock.price)}</td>
             <td>
-                <input id="qty-${stock.symbol}" type="number" min="1" value="1" style="width:80px;" />
-                <button onclick="setQuickFromMarket('${stock.symbol}','qty-${stock.symbol}')">Use</button>
+                <input id="qty-${index}" type="number" min="1" value="1" style="width:80px;" />
+                <button class="use-market-btn" data-index="${index}">Use</button>
             </td>
         </tr>`).join('');
 
     document.getElementById('marketTable').innerHTML = `<table><thead><tr><th>Stock</th><th>Price</th><th>Trade</th></tr></thead><tbody>${rows}</tbody></table>`;
+    document.querySelectorAll('.use-market-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const index = Number(button.dataset.index);
+            const stock = nseStocks[index];
+            if (stock) {
+                setQuickFromMarket(stock.symbol, `qty-${index}`);
+            }
+        });
+    });
 }
 
 function setQuickFromMarket(symbol, qtyInputId) {
@@ -241,9 +250,15 @@ function renderHistory() {
 }
 
 function renderBots() {
-    document.getElementById('botStrategies').innerHTML = strategies
-        .map((name) => `<button onclick="runBotStrategy('${name.replace(/'/g, "\\'")}')">${name}</button>`)
-        .join('');
+    const container = document.getElementById('botStrategies');
+    container.innerHTML = '';
+    strategies.forEach((name) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = name;
+        button.addEventListener('click', () => runBotStrategy(name));
+        container.appendChild(button);
+    });
 }
 
 function runBotStrategy(strategy) {
@@ -272,8 +287,19 @@ function renderSummary() {
 }
 
 function exportToCSV() {
+    const escapeCsv = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = ['timestamp,action,symbol,quantity,price,amount,pnl'];
-    tradeHistory.forEach((t) => rows.push(`${t.timestamp},${t.action},${t.symbol},${t.quantity},${t.price},${t.amount},${t.pnl}`));
+    tradeHistory.forEach((t) => rows.push(
+        [
+            t.timestamp,
+            t.action,
+            t.symbol,
+            t.quantity,
+            t.price,
+            t.amount,
+            t.pnl
+        ].map(escapeCsv).join(',')
+    ));
     downloadFile('trade-history.csv', rows.join('\n'), 'text/csv');
 }
 
